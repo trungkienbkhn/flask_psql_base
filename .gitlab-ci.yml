@@ -1,0 +1,42 @@
+stages:
+  - Static Analysis
+  - Server Test
+
+pylint:
+  stage: Static Analysis
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+  before_script:
+    - apk update
+    - apk upgrade
+    - apk add python3 python3-dev py3-pip
+    - pip3 install --upgrade pip
+    - pip3 install pylint==2.12.2
+    - pip3 install -r requirements.txt
+    - export PYTHONPATH=$PWD
+  script:
+    - pylint --rcfile=./.pylintrc server/*.py
+
+test:
+  stage: Test
+  services:
+    - name: docker:dind
+      alias: localhost
+  tags: [docker, linux]
+  before_script:
+    - apk add python3 python3-dev py3-pip
+    - pip3 install --upgrade pip
+    - pip3 install docker-compose
+    - pip3 install pytest==4.0.0 pytest-variables
+    - pip3 install -r requirements.txt
+    - docker-compose up --build -d
+    - docker-compose ps
+    - sleep 20
+  script:
+    - docker-compose ps
+    - docker-compose logs console
+    - export PYTHONPATH=$PWD
+    - pytest --variables tests/dev-test.json tests/
+
+  after_script:
+    - docker-compose down
