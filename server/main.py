@@ -1,7 +1,7 @@
 from flask import redirect
 from server.app import app
 # pylint: disable=unused-import
-from server.routes import status, user
+from server.routes import status, user, auth
 from server.models.db_models import db
 
 
